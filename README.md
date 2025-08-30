@@ -54,3 +54,19 @@ Para conveniência, um arquivo `VoiceRecorder.exe` pode ser gerado. Ele pode ser
 1.  Navegue até a pasta `dist/`.
 2.  Execute o arquivo `VoiceRecorder.exe`.
 3.  O ícone aparecerá na bandeja do sistema, pronto para uso.
+
+## Gerando o Executável (`.exe`)
+
+Para gerar o arquivo `.exe` por conta própria, primeiro instale o `pyinstaller`:
+
+```bash
+pip install pyinstaller
+```
+
+Depois, execute o seguinte comando na raiz do projeto:
+
+```bash
+python -m PyInstaller --windowed --onefile --name VoiceRecorder src/main.py
+```
+
+O arquivo `VoiceRecorder.exe` final estará na pasta `dist/`.
