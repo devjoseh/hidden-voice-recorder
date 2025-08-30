@@ -19,7 +19,7 @@ Se você deseja executar ou modificar o projeto a partir do código-fonte, siga 
 
 1.  **Clone o repositório:**
     ```bash
-    git clone <URL_DO_SEU_REPOSITORIO_AQUI>
+    git clone https://github.com/devjoseh/hidden-voice-recorder.git
     cd voice-recorder
     ```
 
