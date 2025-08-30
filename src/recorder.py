@@ -7,8 +7,41 @@ import os
 from datetime import datetime
 
 def get_input_devices():
+    """Gets a cleaned-up list of unique input devices, prioritizing WASAPI."""
     devices = sd.query_devices()
-    input_devices = {i: devices[i]['name'] for i in range(len(devices)) if devices[i]['max_input_channels'] > 0}
+    hostapis = sd.query_hostapis()
+    
+    wasapi_index = -1
+    for i, api in enumerate(hostapis):
+        if api['name'] == 'Windows WASAPI':
+            wasapi_index = i
+            break
+
+    input_devices = {}
+    seen_names = set()
+
+    # Prioritize WASAPI devices
+    for i, dev in enumerate(devices):
+        if dev['hostapi'] == wasapi_index and dev['max_input_channels'] > 0:
+            # Clean up common system device names
+            if '@' in dev['name'] or 'Mapeador' in dev['name']:
+                continue
+            
+            if dev['name'] not in seen_names:
+                input_devices[i] = dev['name']
+                seen_names.add(dev['name'])
+
+    # If no WASAPI devices found, fall back to any input device
+    if not input_devices:
+        for i, dev in enumerate(devices):
+            if dev['max_input_channels'] > 0:
+                if '@' in dev['name'] or 'Mapeador' in dev['name']:
+                    continue
+                
+                if dev['name'] not in seen_names:
+                    input_devices[i] = dev['name']
+                    seen_names.add(dev['name'])
+
     return input_devices
 
 class Recorder:
