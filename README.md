@@ -47,14 +47,6 @@ python src/main.py
 
 Um ícone de microfone aparecerá na sua bandeja do sistema. Clique com o botão direito nele para controlar a gravação.
 
-### Usando o Executável (`.exe`)
-
-Para conveniência, um arquivo `VoiceRecorder.exe` pode ser gerado. Ele pode ser executado em qualquer máquina Windows sem a necessidade de instalar Python ou qualquer dependência.
-
-1.  Navegue até a pasta `dist/`.
-2.  Execute o arquivo `VoiceRecorder.exe`.
-3.  O ícone aparecerá na bandeja do sistema, pronto para uso.
-
 ## Gerando o Executável (`.exe`)
 
 Para gerar o arquivo `.exe` por conta própria, primeiro instale o `pyinstaller`:
@@ -66,7 +58,7 @@ pip install pyinstaller
 Depois, execute o seguinte comando na raiz do projeto:
 
 ```bash
-python -m PyInstaller --windowed --onefile --name VoiceRecorder src/main.py
+python -m PyInstaller --windowed --onefile --name VoiceRecorder --icon="assets/icon.ico" src/main.py
 ```
 
 O arquivo `VoiceRecorder.exe` final estará na pasta `dist/`.
