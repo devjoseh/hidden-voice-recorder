@@ -1,9 +1,9 @@
-
 import pystray
-from pystray import MenuItem as item
+from pystray import MenuItem as item, Menu
 from PIL import Image, ImageDraw
 import threading
-from recorder import Recorder
+from functools import partial
+from recorder import Recorder, get_input_devices
 
 def create_icon_image():
     # Create a simple icon image (a red circle for recording)
@@ -22,42 +22,66 @@ class VoiceRecorderApp:
     def __init__(self):
         self.recorder = Recorder()
         self.icon = None
-        self.stop_event = threading.Event()
 
     def on_start_recording(self, icon, item):
-        print("Starting recording from menu")
+        print("Iniciando gravação pelo menu")
         self.recorder.start_recording()
         self.update_menu()
 
     def on_stop_recording(self, icon, item):
-        print("Stopping recording from menu")
+        print("Parando gravação pelo menu")
         self.recorder.stop_recording()
         self.update_menu()
 
     def on_exit(self, icon, item):
-        print("Exiting...")
+        print("Saindo...")
         if self.recorder.is_recording:
             self.recorder.stop_recording()
         self.icon.stop()
 
+    def on_device_selected(self, device_index, icon, item):
+        # The icon and item arguments are passed by pystray, so we must accept them.
+        self.recorder.set_device(device_index)
+        self.update_menu()
+
+    def create_devices_menu(self):
+        devices = get_input_devices()
+        if not devices:
+            return [item('Nenhum microfone encontrado', None, enabled=False)]
+
+        menu_items = []
+        for index, name in devices.items():
+            # Use partial to freeze the index value for the callback
+            # The callback will be called with (icon, item), and our frozen index will be passed first.
+            action = partial(self.on_device_selected, index)
+            menu_items.append(item(
+                name,
+                action,
+                checked=lambda item, index=index: self.recorder.device == index,
+                radio=True
+            ))
+        return menu_items
+
     def get_menu(self):
         is_recording = self.recorder.is_recording
+        
+        devices_submenu = Menu(*self.create_devices_menu())
+
         return (
             item(
-                'Iniciar Grava\u00e7\u00e3o',
+                'Iniciar Gravação',
                 self.on_start_recording,
-                enabled=not is_recording
+                enabled=not is_recording and self.recorder.device is not None
             ),
             item(
-                'Parar Grava\u00e7\u00e3o',
+                'Parar Gravação',
                 self.on_stop_recording,
                 enabled=is_recording
             ),
-            pystray.Menu.SEPARATOR,
-            item(
-                'Sair',
-                self.on_exit
-            )
+            Menu.SEPARATOR,
+            item('Dispositivo de Entrada', devices_submenu),
+            Menu.SEPARATOR,
+            item('Sair', self.on_exit)
         )
 
     def update_menu(self):

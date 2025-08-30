@@ -6,6 +6,11 @@ import threading
 import os
 from datetime import datetime
 
+def get_input_devices():
+    devices = sd.query_devices()
+    input_devices = {i: devices[i]['name'] for i in range(len(devices)) if devices[i]['max_input_channels'] > 0}
+    return input_devices
+
 class Recorder:
     def __init__(self, output_folder="recordings"):
         self.output_folder = output_folder
@@ -15,9 +20,24 @@ class Recorder:
         self.thread = None
         self.samplerate = 44100
         self.channels = 1
+        try:
+            # Set default device
+            self.device = sd.default.device['input']
+        except (ValueError, TypeError):
+            # Fallback if no default input device is configured
+            devices = get_input_devices()
+            if devices:
+                self.device = list(devices.keys())[0]
+            else:
+                self.device = None
+                print("ERRO: Nenhum microfone encontrado.")
 
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
+
+    def set_device(self, device_index):
+        print(f"Microfone alterado para o dispositivo: {device_index}")
+        self.device = device_index
 
     def _record_thread(self):
         self.frames = []
@@ -27,41 +47,45 @@ class Recorder:
                 print(status)
             self.frames.append(indata.copy())
 
-        with sd.InputStream(samplerate=self.samplerate, channels=self.channels, callback=callback) as self.stream:
-            while self.is_recording:
-                sd.sleep(100)
+        try:
+            with sd.InputStream(samplerate=self.samplerate, channels=self.channels, device=self.device, callback=callback) as self.stream:
+                while self.is_recording:
+                    sd.sleep(100)
+        except Exception as e:
+            print(f"Erro ao abrir o stream de áudio: {e}")
+            self.is_recording = False # Stop recording state if stream fails
 
     def start_recording(self):
         if self.is_recording:
-            print("Already recording.")
+            print("Já gravando.")
+            return
+        
+        if self.device is None:
+            print("Não é possível iniciar a gravação: nenhum microfone selecionado ou disponível.")
             return
 
         self.is_recording = True
         self.thread = threading.Thread(target=self._record_thread)
         self.thread.start()
-        print("Recording started.")
+        print("Gravação iniciada.")
 
     def stop_recording(self):
         if not self.is_recording:
-            print("Not recording.")
+            # This can be triggered if the stream failed to open, so don't print "Not recording"
             return
 
         self.is_recording = False
         if self.thread is not None:
             self.thread.join()
         
-        if self.stream is not None:
-            # The stream is managed by the 'with' statement, but let's be safe
-            # self.stream.stop() 
-            # self.stream.close()
-            self.stream = None
+        self.stream = None
 
-        print("Recording stopped.")
+        print("Gravação parada.")
         self.save_recording()
 
     def save_recording(self):
         if not self.frames:
-            print("No frames to save.")
+            print("Nenhum frame para salvar.")
             return
 
         filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".wav"
@@ -71,5 +95,5 @@ class Recorder:
         
         wavio.write(filepath, recording, self.samplerate, sampwidth=2)
         
-        print(f"Recording saved to {filepath}")
+        print(f"Gravação salva em {filepath}")
         self.frames = []

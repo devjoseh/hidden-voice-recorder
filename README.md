@@ -5,6 +5,7 @@ Um aplicativo simples para Windows que permite gravar áudio do microfone de for
 ## Funcionalidades
 
 - **Operação Discreta:** Sem janela principal, ícone na barra de tarefas ou visibilidade no Alt+Tab.
+- **Seleção de Microfone:** Permite escolher qual microfone usar através de um sub-menu, que indica o dispositivo em uso.
 - **Controle pela Bandeja do Sistema:** O aplicativo é controlado por um ícone na bandeja do sistema (ao lado do relógio), com um menu de clique com o botão direito.
 - **Fácil de Usar:** Opções simples para "Iniciar Gravação", "Parar Gravação" e "Sair".
 - **Salvamento Automático:** As gravações são salvas automaticamente em formato `.wav` na pasta `recordings/`, com o nome do arquivo sendo a data e a hora da gravação (ex: `2025-08-29_14-30-00.wav`).
